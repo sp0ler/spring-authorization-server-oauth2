@@ -1,0 +1,11 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/spring_security"
+    username: "denis"
+    password: "password"
+  jpa:
+    hibernate.ddl-auto: update
+    show-sql: true
