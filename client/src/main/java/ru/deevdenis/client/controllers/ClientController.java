@@ -31,4 +31,9 @@ public class ClientController {
 
         return result;
     }
+
+    @GetMapping("/registration")
+    public String getRegistration() {
+        return "registration";
+    }
 }

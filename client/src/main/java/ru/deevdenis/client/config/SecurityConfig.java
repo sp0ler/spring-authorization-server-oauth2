@@ -12,9 +12,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests(it -> it.anyRequest().authenticated())
-                .oauth2Login(it -> it.loginPage(
+        http.
+                authorizeRequests().
+                antMatchers("/registration").permitAll()
+                .and()
+                .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
+                .oauth2Login(oauth2Login -> oauth2Login.loginPage(
                         OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI
                                 + "messages-client-oidc"
                 ))

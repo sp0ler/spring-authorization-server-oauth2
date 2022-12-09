@@ -3,15 +3,21 @@ package ru.deevdenis.authserver.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
+import org.springframework.orm.jpa.EntityManagerFactoryInfo;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.stereotype.Component;
 import ru.deevdenis.authserver.entities.AuthUser;
 import ru.deevdenis.authserver.repositories.UserRepository;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
 import java.io.Serializable;
 import java.nio.CharBuffer;
 import java.util.Collections;
@@ -22,7 +28,7 @@ import java.util.Optional;
 public class UserAuthProvider implements AuthenticationProvider, Serializable {
 
     @Autowired
-    private UserRepository userRepository;
+    private RegisteredClientRepository registeredClientRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -32,15 +38,14 @@ public class UserAuthProvider implements AuthenticationProvider, Serializable {
     @Nullable
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String login = authentication.getName();
-        String password = authentication.getCredentials().toString();
+        String secret = authentication.getCredentials().toString();
 
-        Optional<AuthUser> oUser = userRepository.findByLogin(login);
+        RegisteredClient client = registeredClientRepository.findByClientId(login);
 
-        if (oUser.isEmpty()) return null;
+        if (client == null) return null;
 
-        AuthUser user = oUser.get();
-        if (passwordEncoder.matches(CharBuffer.wrap(password), user.getPassword())) {
-            return UsernamePasswordAuthenticationToken.authenticated(login, password, Collections.emptyList());
+        if (passwordEncoder.matches(CharBuffer.wrap(secret), client.getClientSecret())) {
+            return UsernamePasswordAuthenticationToken.authenticated(login, secret, Collections.emptyList());
         }
 
         return null;
