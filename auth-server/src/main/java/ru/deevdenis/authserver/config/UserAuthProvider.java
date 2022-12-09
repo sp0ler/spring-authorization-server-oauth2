@@ -1,6 +1,7 @@
 package ru.deevdenis.authserver.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.EntityManagerFactoryInfo;
@@ -25,6 +26,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class UserAuthProvider implements AuthenticationProvider, Serializable {
 
     @Autowired
@@ -32,8 +34,7 @@ public class UserAuthProvider implements AuthenticationProvider, Serializable {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-
+    
     @Override
     @Nullable
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -42,12 +43,17 @@ public class UserAuthProvider implements AuthenticationProvider, Serializable {
 
         RegisteredClient client = registeredClientRepository.findByClientId(login);
 
-        if (client == null) return null;
+        if (client == null) {
+            log.info("User: {} is unsuccessfully authenticated. Bad login", login);
+            return null;
+        }
 
         if (passwordEncoder.matches(CharBuffer.wrap(secret), client.getClientSecret())) {
+            log.info("User: {} is successfully authenticated", login);
             return UsernamePasswordAuthenticationToken.authenticated(login, secret, Collections.emptyList());
         }
 
+        log.info("User: {} is unsuccessfully authenticated. Bad credentials", login);
         return null;
     }
 
